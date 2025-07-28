@@ -1,7 +1,3 @@
-Great — based on your code, your previous README, and the PDF brief you were given, here’s a **refined and complete `README.md`** tailored to both showcase your technical execution and align with what the evaluators are expecting:
-
----
-
 # 🏠🏞 Indoor/Outdoor Image Classification
 
 This project contains a Python script for classifying images as either "indoor" or "outdoor" scenes using a pre-trained CLIP model and a lightweight few-shot, prototype-based method. It was built in response to a practical classification task using real-world, unlabeled image data.
