@@ -57,7 +57,7 @@ project-root/
 ├── requirements.txt                 # Python dependencies
 ```
 
-### 📂2. Auto-Unzip ZIP Files
+### 📂 (Optional) Auto-Unzip ZIP Files
 
 The `few_shot`, `validation`, and `unlabeled` image folders are stored as ZIP files in the `data/` folder (e.g., `data/few_shot.zip`), the script will automatically unzip them into the root directory when it runs.
 
