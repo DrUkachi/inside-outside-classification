@@ -11,14 +11,18 @@ from collections import Counter
 
 # --- 1. Model Loading and Setup ---
 
+# Determine if CUDA is available and select device accordingly
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 MODEL_NAME = "openai/clip-vit-base-patch32"
 
+# Load CLIP model and processor from Hugging Face
 processor = AutoProcessor.from_pretrained(MODEL_NAME)
 model = AutoModel.from_pretrained(MODEL_NAME).to(DEVICE)
 model.eval()
 
 # --- 2. Folder and Prompt Setup ---
+
+# Get the path where this script resides
 base_path = os.path.dirname(os.path.abspath(__file__))
 REVIEW_MARGIN = 0.05  # If top-2 scores are within this, send to review
 
@@ -46,6 +50,8 @@ unzip_if_needed("few_shot.zip", "few_shot")
 unzip_if_needed("validation.zip", "validation")
 unzip_if_needed("unlabeled.zip", "unlabeled")
 
+# Folder and prompt setup for indoor and outdoor classification
+
 folders = {
     "indoor": {
         "few_shot": os.path.join(base_path, "few_shot/indoor"),
@@ -71,6 +77,7 @@ folders = {
     }
 }
 
+# Folder for ambiguous results that need human review
 review_folder = os.path.join(base_path, "classified/review")
 os.makedirs(review_folder, exist_ok=True)
 
@@ -155,16 +162,19 @@ def classify_unlabeled_images(unlabeled_folder):
             path = os.path.join(unlabeled_folder, fname)
             image_emb = embed_image(path).squeeze()
 
+             # Compute similarity scores for each class
             scores = {}
             for label, data in folders.items():
                 sim_text = torch.cosine_similarity(image_emb, data["prompt_embedding"], dim=0).item()
                 sim_image = torch.cosine_similarity(image_emb, data["image_embedding"].squeeze(), dim=0).item()
                 scores[label] = (sim_text + sim_image) / 2
             
+            # Sort by similarity score
             sorted_scores = sorted(scores.items(), key=lambda x: x[1], reverse=True)
             top_label, top_score = sorted_scores[0]
             second_label, second_score = sorted_scores[1]
 
+            # If top 2 scores are too close, send to review
             if (top_score - second_score) < REVIEW_MARGIN:
                 shutil.copy(path, os.path.join(review_folder, fname))
                 decision = "REVIEW"
@@ -209,6 +219,7 @@ def validate_classification_from_filenames(val_folder):
             predicted_label = max(scores, key=scores.get)
             y_pred.append(predicted_label)
 
+            # Infer ground-truth label from filename prefix
             fname_lower = fname.lower()
             if fname_lower.startswith("indoor_"):
                 y_true.append("indoor")
