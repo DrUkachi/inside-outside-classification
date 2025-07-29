@@ -33,9 +33,8 @@ Follow these steps to set up and run the classifier on your own machine.
 First, clone this repository to your local machine using Git:
 
 ```bash
-git clone https://your-repository-url-here.git
+git clone https://github.com/DrUkachi/inside-outside-classification.git
 ```
-> 👉 **Note:** Replace `https://your-repository-url-here.git` with the actual URL of your Git repository.
 
 ### 2. Navigate into the Project Directory
 
@@ -181,7 +180,7 @@ When the model is **unsure** (i.e., the similarity difference between the top tw
 
 *   `classify.py`: Main classification and validation script
 *   `README.md`: Full guide and technical report (this file)
-*   Folder structure with `few_shot`, `unlabeled`, `validation`, `review`, and `classified/` directories
+*   Folder structure with `few_shot`, `unlabeled`, `validation`, and `classified/` directories
 
 ---
 
