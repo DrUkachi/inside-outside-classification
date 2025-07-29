@@ -1,6 +1,6 @@
 # 🏠🏞 Indoor/Outdoor Image Classification
 
-This project contains a Python script for classifying images as either "indoor" or "outdoor" scenes using a pre-trained CLIP model and a lightweight few-shot, prototype-based method. It was built in response to a practical classification task using real-world, unlabeled image data.
+This project contains a Python script for classifying images as either **indoor** or **outdoor** scenes using a pre-trained CLIP model and a lightweight few-shot, prototype-based method. It was built in response to a practical classification task using real-world, unlabeled image data.
 
 ---
 
@@ -10,25 +10,29 @@ The classifier leverages **OpenAI’s CLIP (`clip-vit-base-patch32`)** as a visu
 
 It is:
 
-* **Training-free** (no fine-tuning needed)
-* **Fast**, with support for CPU
-* **Modular**, and easy to improve further
+* ✅ **Training-free** (no fine-tuning needed)
+* ⚡ **Fast**, with support for CPU
+* 🔧 **Modular**, and easy to improve further
 
 ---
 
 ## ⚙️ Requirements
 
 * Python 3.8+
-* PyTorch
-* HuggingFace Transformers
-* Pillow
-* tqdm
+* Dependencies listed in `requirements.txt`
 
-Install dependencies:
+### 🔧 Install
 
 ```bash
-pip install torch torchvision transformers pillow tqdm
+pip install -r requirements.txt
 ```
+
+This installs:
+
+* PyTorch
+* HuggingFace Transformers
+* Pillow (for image handling)
+* tqdm (for progress bars)
 
 ---
 
@@ -39,23 +43,32 @@ pip install torch torchvision transformers pillow tqdm
 Your project structure should look like this:
 
 ```
-
 few_shot/
-├── inside/         # 14 indoor example images
-└── outside/        # 56 outdoor example images
+├── indoor/         # 14 indoor example images
+└── outdoor/        # 56 outdoor example images
 unlabeled/          # images to classify
+validation/         # images used for validation
 classified/
-├── inside/
-└── outside/
+├── indoor/
+├── outdoor/
+└── review/         # 🔄 images that are ambiguous or borderline
 ```
 
-### 2. Run the Script
+### 2. Example Usage
+
+#### I. To classify images:
 
 ```bash
-python classify.py --unlabeled_folder ./unlabeled
+python classify.py --mode classify --folder ./unlabeled
 ```
 
-All images will be sorted into `classified/inside/` or `classified/outside/`.
+#### II. To validate predictions using filename labels:
+
+```bash
+python classify.py --mode validate --folder ./validation
+```
+
+All classified images will be sorted into `classified/indoor/`, `classified/outdoor/`, or `classified/review/` folders.
 
 ---
 
@@ -63,20 +76,30 @@ All images will be sorted into `classified/inside/` or `classified/outside/`.
 
 ### ✔ Model
 
-* Used `openai/clip-vit-base-patch32` from HuggingFace.
+* Uses `openai/clip-vit-base-patch32` from HuggingFace
 * Embeddings are extracted for both:
 
-  * **Text prompts** (e.g. “a photo taken indoors”)
+  * **Text prompts** (e.g., “a photo taken indoors”)
   * **Few-shot example images**
 
 ### ✔ Classification Logic
 
-* For each input image:
+* For each image:
 
-  1. Get its CLIP embedding.
-  2. Compute similarity with the **averaged prompt embeddings** and **few-shot image embeddings** for both classes.
-  3. Predict the label based on which class is most similar.
-  4. Copy the image into `classified/inside` or `classified/outside`.
+  1. Get its CLIP embedding
+  2. Compare it to the **averaged prompt embeddings** and **few-shot image embeddings**
+  3. Compute similarity to both classes
+  4. 🔄 If the top two scores are close (within 0.05), the image is **sent to review**
+  5. Otherwise, assign to the class with the highest similarity
+
+---
+
+## ⚖️ What Does the `REVIEW_MARGIN = 0.05` Mean?
+
+When the model is **unsure** (i.e., the similarity difference between the top two classes is small), the image is routed to a **`review/` folder** for manual inspection.
+
+> 🧠 *Why 0.05?*
+> A 5% margin was selected as a **practical threshold for ambiguity**. It captures borderline cases where CLIP's semantic similarity doesn't clearly favor one class. This value can be tuned depending on tolerance for false positives or the capacity for human review.
 
 ---
 
@@ -84,47 +107,41 @@ All images will be sorted into `classified/inside/` or `classified/outside/`.
 
 ### ✅ Strengths
 
-* **No model training required**.
-* Uses **semantic understanding** of CLIP to generalize well from very few examples.
-* Classification is fast and explainable via embedding similarity.
+* No model training required
+* Strong generalization from a few visual examples
+* Prompt-based reasoning makes it adaptable to other classes
 
 ### ⚠️ Limitations & Edge Cases
 
-| Category                      | Example                             | Insight                                                                                      |
-| ----------------------------- | ----------------------------------- | -------------------------------------------------------------------------------------------- |
-| **Ambiguous scenes**          | `190881191_*.jpg`                   | Difficult even for humans — may require a third “uncertain” class.                           |
-| **Roofed or car interiors**   | `219636488_*.jpg`, `70939958_*.jpg` | Hard to classify without additional context. A metadata-aware system could help.             |
-| **Clear misclassifications**  | `79869777_*.jpg`, `227589596_*.jpg` | These suggest potential for integrating a secondary model (e.g., object or scene detection). |
-| **Unexplainable predictions** | `253900795_*.jpg`                   | Using tools like SHAP or Grad-CAM could help analyze model behavior.                         |
-| **Prompt sensitivity**        | `50587842_*.jpg`, `56540294_*.jpg`  | Prompt phrasing impacts performance. Dataset-specific tuning may be necessary.               |
-| **Environmental cues**        | `99454779_*.jpg`                    | CLIP may misinterpret light, shadow, or dominant color tones without grounding.              |
+| Category                      | Example                             | Insight                                                                             |
+| ----------------------------- | ----------------------------------- | ----------------------------------------------------------------------------------- |
+| **Ambiguous scenes**          | `190881191_*.jpg`                   | Even humans disagree — routed to **review/** folder                                 |
+| **Roofed or car interiors**   | `219636488_*.jpg`, `70939958_*.jpg` | Challenging without contextual metadata                                             |
+| **Clear misclassifications**  | `79869777_*.jpg`, `227589596_*.jpg` | Could benefit from a secondary model (e.g., object detection)                       |
+| **Unexplainable predictions** | `253900795_*.jpg`                   | Explaining CLIP decisions is non-trivial — visual interpretability tools could help |
+| **Prompt sensitivity**        | `50587842_*.jpg`, `56540294_*.jpg`  | Slight changes in text can impact results — consider dynamic prompt ensembling      |
+| **Environmental cues**        | `99454779_*.jpg`                    | Brightness, lighting, and framing may bias CLIP's perception                        |
 
 ---
 
 ## 💡 What I'd Improve with More Time
 
-1. **Scene-based Inference Engine**
-   Integrate a secondary model like **Places365** to handle hard or misclassified cases via scene labels (e.g., “sky”, “room”, “forest”).
+1. **Scene-Based Inference Engine**
+   Use models like **Places365** to classify contextually confusing cases (e.g., parking lots, stadiums).
 
-2. **Confidence Thresholding + Review Bucket**
-   Use cosine margin between top class scores to route ambiguous images to a separate `review/` folder.
+2. **Explainability Tools**
+   Add **SHAP**, **Grad-CAM**, or embedding heatmaps to interpret classification decisions.
 
-3. **Explainability Tools**
-   Integrate **SHAP** or **Grad-CAM** for analyzing misclassifications and model confidence.
-
-4. **Prompt Augmentation**
-   Dynamically optimize prompts using prompt ensembling or prompt tuning strategies.
-
-5. **Logistic Regression Head (Optional)**
-   For larger datasets (\~100+ labeled examples), train a simple linear classifier on top of embeddings for potentially improved boundaries.
+3. **Prompt Augmentation & Tuning**
+   Dynamically improve text prompts using automated selection or fine-tuned language prompts.
 
 ---
 
 ## 📁 Deliverables
 
-* `classify.py`: Main script to run the classification
-* `README.md`: (You’re here!)
-* Folder structure with `few_shot`, `unlabeled`, and `classified` directories
+* `classify.py`: Main classification and validation script
+* `README.md`: Full guide and technical report (this file)
+* Folder structure with `few_shot`, `unlabeled`, `validation`, `review`, and `classified/` directories
 
 ---
 
@@ -132,7 +149,8 @@ All images will be sorted into `classified/inside/` or `classified/outside/`.
 
 This solution demonstrates:
 
-* ✅ Use of embeddings and pre-trained models
-* ✅ Lightweight, reproducible pipeline
-* ✅ Awareness of edge cases and limitations
-* ✅ Modular and explainable approach
+* ✅ Effective use of large pre-trained vision-language models
+* ✅ Lightweight and reproducible code
+* ✅ Clear handling of edge cases
+* ✅ Review mechanism for ambiguous images
+* ✅ Good modularity for future extensions
