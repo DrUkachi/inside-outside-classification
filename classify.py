@@ -23,6 +23,12 @@ base_path = os.path.dirname(os.path.abspath(__file__))
 REVIEW_MARGIN = 0.05  # If top-2 scores are within this, send to review
 
 def unzip_if_needed(zip_name, target_folder):
+    """ Unzips a zip file if the target folder does not exist. """
+    """ Args:
+        zip_name (str): Name of the zip file to unzip.
+        target_folder (str): Folder where the contents should be extracted.
+    """
+
     zip_path = os.path.join(base_path, "data", zip_name)
     extract_path = os.path.join(base_path, target_folder)
     if not os.path.exists(extract_path):
@@ -71,6 +77,13 @@ os.makedirs(review_folder, exist_ok=True)
 # --- 3. Embedding Functions ---
 
 def embed_image(image_path):
+    """
+    Embed a single image using the CLIP model.
+    Args:
+        image_path (str): Path to the image file.
+        Returns:
+        torch.Tensor: Normalized image embedding.
+    """
     image = Image.open(image_path).convert("RGB")
     inputs = processor(images=image, return_tensors="pt").to(DEVICE)
     with torch.no_grad():
@@ -79,6 +92,12 @@ def embed_image(image_path):
 
 
 def embed_prompt_list(prompts):
+    """
+    Embed a list of text prompts using the CLIP model.
+     Args:
+        prompts (list): List of text prompts to embed.
+        Returns:
+        torch.Tensor: Mean embedding of all prompts."""
     inputs = processor(text=prompts, return_tensors="pt", padding=True).to(DEVICE)
     with torch.no_grad():
         text_emb = model.get_text_features(**inputs)
@@ -86,6 +105,15 @@ def embed_prompt_list(prompts):
 
 
 def embed_few_shot_images(folder):
+    """
+    Embed all images in a folder and return the mean embedding.
+    This is used for few-shot learning.
+    
+    Args:
+        folder (str): Path to the folder containing few-shot images.
+        Returns:
+        torch.Tensor: Mean embedding of all images in the folder.
+        """
     all_embeddings = []
     for fname in os.listdir(folder):
         if fname.lower().endswith(('.jpg', '.jpeg', '.png')):
@@ -98,6 +126,12 @@ def embed_few_shot_images(folder):
 
 
 def initialize_class_prototypes():
+    """
+    Initialize class prototypes by embedding prompts and few-shot images.
+    This is done once at the start of the classification process 
+    to avoid redundant computations.
+    """
+
     print("📐 Creating class prototypes...\n")
     for data in folders.values():
         data["prompt_embedding"] = embed_prompt_list(data["prompts"])
@@ -106,6 +140,10 @@ def initialize_class_prototypes():
 # --- 4. Classification Mode ---
 
 def classify_unlabeled_images(unlabeled_folder):
+    """ Classify unlabeled images in a given folder using the pre-trained CLIP model.
+    Args:
+        unlabeled_folder (str): Path to the folder containing unlabeled images.
+    """
     for data in folders.values():
         os.makedirs(data["output"], exist_ok=True)
 
@@ -147,6 +185,10 @@ def classify_unlabeled_images(unlabeled_folder):
 # --- 5. Validation Mode ---
 
 def validate_classification_from_filenames(val_folder):
+    """ Validate classification by checking filenames in a given folder.
+    Args:
+        val_folder (str): Path to the folder containing validation images.
+    """
     image_files = [f for f in os.listdir(val_folder) if f.lower().endswith(('.jpg', '.jpeg', '.png'))]
     print(f"🧪 Validating {len(image_files)} images from '{val_folder}'...\n")
 
