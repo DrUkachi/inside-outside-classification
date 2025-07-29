@@ -43,18 +43,21 @@ This installs:
 Your project structure should look like this:
 
 ```
-few_shot/
-├── indoor/         # 14 indoor example images
-└── outdoor/        # 56 outdoor example images
-unlabeled/          # images to classify
-validation/         # images used for validation
-classified/
-├── indoor/
-├── outdoor/
-└── review/         # 🔄 images that are ambiguous or borderline
+project-root/
+├── data/                            # Contains zipped image data
+│   ├── few_shot.zip
+│   ├── validation.zip
+│   └── unlabeled.zip
+│
+├── .gitignore                       # Specifies ignored files and folders
+├── README.md                        # Documentation with usage instructions
+├── classify.py                      # Main script for classification
+├── experiment.ipynb                 # Jupyter notebook for experimentation
+├── few_shot_images.json             # JSON list of few-shot reference images
+├── requirements.txt                 # Python dependencies
 ```
 
-### 📂 Optional: Auto-Unzip ZIP Files
+### 📂2. Auto-Unzip ZIP Files
 
 The `few_shot`, `validation`, and `unlabeled` image folders are stored as ZIP files in the `data/` folder (e.g., `data/few_shot.zip`), the script will automatically unzip them into the root directory when it runs.
 
