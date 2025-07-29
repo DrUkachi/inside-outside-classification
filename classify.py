@@ -1,4 +1,5 @@
 import os
+import zipfile
 import shutil
 import argparse
 from PIL import Image
@@ -20,6 +21,24 @@ model.eval()
 # --- 2. Folder and Prompt Setup ---
 base_path = os.path.dirname(os.path.abspath(__file__))
 REVIEW_MARGIN = 0.05  # If top-2 scores are within this, send to review
+
+def unzip_if_needed(zip_name, target_folder):
+    zip_path = os.path.join(base_path, "data", zip_name)
+    extract_path = os.path.join(base_path, target_folder)
+    if not os.path.exists(extract_path):
+        if os.path.isfile(zip_path):
+            print(f"📦 Unzipping {zip_name} to {extract_path}...")
+            with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+                zip_ref.extractall(base_path)
+        else:
+            print(f"⚠️ Zip file '{zip_name}' not found in /data")
+    else:
+        print(f"✅ '{target_folder}' already exists, skipping unzip.")
+
+# Automatically unzip if needed
+unzip_if_needed("few_shot.zip", "few_shot")
+unzip_if_needed("validation.zip", "validation")
+unzip_if_needed("unlabeled.zip", "unlabeled")
 
 folders = {
     "indoor": {

@@ -1,0 +1,27 @@
+# Ignore raw image folders
+few_shot/
+classified/
+review/
+
+# Ignore unzipped dataset folders
+data/few_shot/
+
+# Ignore temporary or working image files
+*.jpg
+*.jpeg
+*.png
+
+# But allow versioned zipped dataset
+!data/few_shot.zip
+
+# Ignore backup or OS-specific files
+.DS_Store
+Thumbs.db
+
+# Ignore Python cache
+__pycache__/
+*.pyc
+
+# Ignore virtual environments
+.venv/
+env/
