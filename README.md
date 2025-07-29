@@ -54,6 +54,30 @@ classified/
 └── review/         # 🔄 images that are ambiguous or borderline
 ```
 
+### 📂 Optional: Auto-Unzip ZIP Files
+
+The `few_shot`, `validation`, and `unlabeled` image folders are stored as ZIP files in the `data/` folder (e.g., `data/few_shot.zip`), the script will automatically unzip them into the root directory when it runs.
+
+**Expected ZIP locations:**
+
+```
+data/
+├── few_shot.zip
+├── validation.zip
+└── unlabeled.zip
+```
+
+When you run the script, it will unzip these files into:
+
+```
+few_shot/
+validation/
+unlabeled/
+```
+
+> 💡 The folders will only be unzipped if they **don’t already exist**, so you can safely rerun the script.
+
+
 ### 2. Example Usage
 
 #### I. To classify images:
